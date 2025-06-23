@@ -104,8 +104,6 @@ EXPLORATION_PROMPTS = {
 def get_llm_instance():
     """初始化並返回 LLM 實例，處理本地和部署環境。"""
     api_key = None
-    # [修正] 您的程式碼查找名為 "DEEPSEEK_API_KEY" 的密鑰，儘管它用於火山引擎。
-    # 我們將保持這個名稱以避免修改過多程式碼，但請確保您填入的是火山引擎的密鑰。
     key_name = "DEEPSEEK_API_KEY"
     try:
         api_key = st.secrets[key_name]
@@ -119,14 +117,13 @@ def get_llm_instance():
         return None
 
     try:
-        # [修正] 恢復為您原始配置的火山引擎端點和模型。
+        # 使用者指定的火山引擎端點和模型
         llm = ChatOpenAI(
             model="deepseek-r1-250528",
             temperature=0.7,
             api_key=api_key,
             base_url="https://ark.cn-beijing.volces.com/api/v3"
         )
-        # 測試連線以確保可用性
         llm.invoke("Hello")
         return llm
     except Exception as e:
@@ -239,7 +236,7 @@ def render_exploration_mode(llm):
              with st.chat_message("ai", avatar="🤖"):
                 st.markdown(current_prompt_info["prompt"])
 
-        # [V4.0 更新] 探索模式的後台指令
+        # [KeyError 修正] 移除 system prompt 中無效的 {interest} 和 {skill} 預留位置
         meta_prompt = ChatPromptTemplate.from_messages([
             ("system", GLOBAL_PERSONA + """
             You are a thoughtful and insightful career planning coach. You are currently in Stage {current_stage} of a five-stage framework.
@@ -247,7 +244,7 @@ def render_exploration_mode(llm):
             After the user answers the questions for a stage, your task is to:
             1. Acknowledge their response.
             2. Provide a brief (2-3 sentences), insightful comment or a thought-provoking follow-up question. You must act as a suggestion provider, not just a data collector.
-            3. [V4.0 Optimization]: For Stage 1, if the user mentions interests and skills, try to connect them, e.g., "It's great that your interest in {interest} aligns with your skill in {skill}. Have you considered how this combination could translate into a specific role?"
+            3. [V4.0 Optimization]: For Stage 1, if the user mentions specific interests and skills, try to connect them. For example, you could say something like: "It's great that your interest in [user's interest] aligns with your skill in [user's skill]. Have you considered how this combination could translate into a specific role?"
             4. [V4.0 Edge Case Handling]: If the user's answer is very vague (e.g., "I don't know", "whatever"), switch to a more guiding question. For example: "That's perfectly fine, many people feel lost at first. Let's try another angle: has there been anything recently that gave you a special sense of accomplishment?"
             5. The program will automatically move to the next stage, so you don't need to say "let's move on". Your response should add value and encourage deeper reflection.
             """),
@@ -276,7 +273,6 @@ def render_decision_mode(llm):
     st.header("⚖️ 模式二: Offer決策分析")
     st.info("此模式通過“分層信息收集”和“個性化分析”，幫助您做出更貼合自身需求的決策。")
 
-    # [V4.0 更新] 決策模式的後台指令
     meta_prompt = ChatPromptTemplate.from_template(GLOBAL_PERSONA + """
 You are an expert career advisor. Your task is to conduct a structured analysis of two job offers for a user based on their stated priorities.
 Offer A Details: {offer_a_details}
@@ -304,7 +300,6 @@ Please perform the following steps and structure your entire response in clear, 
     with col2:
         offer_b = st.text_area("Offer B 關鍵資訊", height=200, placeholder="同樣，包括公司名、職位、薪資、地點、優點、顧慮等")
 
-    # [V4.0 更新] 第二步: 個性化偏好
     st.subheader("第二步：(可選，但強烈建議)添加你的個人偏好")
     st.markdown("為了讓分析更懂你，請告訴我們你對以下幾點的看重程度（請按重要性從高到低依次點擊選擇）:")
     priorities_options = ["職業成長", "薪資福利", "工作生活平衡", "團隊氛圍", "公司穩定性"]
@@ -358,7 +353,6 @@ def render_communication_mode(llm):
     if st.session_state.get('sim_started'):
         st.success(f"模擬開始！AI正在扮演擔憂您選擇 “{st.session_state.my_choice}” 的家人。")
 
-        # [V4.0 更新] 溝通模式的後台指令
         meta_prompt = ChatPromptTemplate.from_messages([
             ("system", GLOBAL_PERSONA + """
             You are an AI role-playing as a user's parent. The user wants to practice a difficult conversation.
@@ -386,9 +380,8 @@ def render_communication_mode(llm):
             with st.chat_message(msg.type, avatar=avatar):
                 st.markdown(msg.content)
 
-        # [V4.0 更新] 複盤/提示功能
         if st.session_state.get('debrief_requested'):
-            st.session_state.debrief_requested = False # 重置標記
+            st.session_state.debrief_requested = False
             with st.spinner("AI正在跳出角色，為您分析溝通技巧..."):
                 full_conversation = "\n".join([f"{'你' if isinstance(msg, HumanMessage) else '“家人”'}: {msg.content}" for msg in history.messages])
                 debrief_prompt = ChatPromptTemplate.from_template(GLOBAL_PERSONA + """
@@ -427,7 +420,6 @@ def render_company_info_mode(llm):
     st.header("🏢 模式四: 企業資訊速覽")
     st.info("請輸入公司全名，AI將模擬網路抓取並為您生成一份核心資訊速覽報告。")
 
-    # [V4.0 更新] 企業資訊模式的後台指令
     meta_prompt = ChatPromptTemplate.from_template(GLOBAL_PERSONA + """
 You are a professional business analyst AI. Your task is to generate a concise, structured summary of a company based on its name.
 Company Name: {company_name}
