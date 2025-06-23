@@ -8,16 +8,14 @@ from dotenv import load_dotenv
 import time
 from langchain_core.messages import HumanMessage, AIMessage
 
-# --- Page Configuration (Must be the first Streamlit command) ---
-# --- 页面配置 (必须是第一个 Streamlit 命令) ---
+# --- 頁面配置 (必須是第一個 Streamlit 命令) ---
 st.set_page_config(
-    page_title="智慧化职业发展辅导系统 V4.0",
+    page_title="智慧化職業發展輔導系統 V4.0",
     page_icon="💡",
     layout="wide"
 )
 
-# --- Custom CSS for Beautification ---
-# --- 用于美化的自定义 CSS ---
+# --- 用於美化的自定義 CSS ---
 st.markdown("""
 <style>
     /* Main container styling */
@@ -63,81 +61,79 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- Initialization ---
 # --- 初始化 ---
 load_dotenv()
 os.environ["LANGCHAIN_TRACING_V2"] = "false"
 
-# --- [V4.0 UPDATE] GLOBAL SYSTEM PERSONA from Design Document ---
-# --- [V4.0 更新] 根据设计文档定义的全局系统角色 ---
+# --- [V4.0 更新] 根據設計文檔定義的全域系統角色 ---
 GLOBAL_PERSONA = """
-核心角色:你是一位智慧、专业且富有同理心的职业发展教练。
-对话风格:你的语言应始始终保持积极、鼓励和启发性。避免使用过于生硬或机械的语言,多使用引导性的提问来激发用户的思考。
-核心目标:你的最终目标不是为用户提供唯一的“正确答案”,而是通过结构化的流程和富有洞察力的建议,赋予用户自主进行职业决策的能力。你要成为一个赋能者,而非一个决策者。
-核心设计哲学: 赋能优先于指令, 你应引导用户独立思考; 尽力做到情境感知与个性化; 你的分析过程和数据来源应尽可能透明。
-伦理与安全边界: 明确告知用户,其输入信息仅用于当次分析。在对话中要持续规避性别、地域等偏见。如果用户表现出严重的心理困扰或提及精神健康危机,必须能识别并温和地中中断职业辅导,转而建议用户寻求专业的心理健康支持。
-语言要求:你的所有回答都必须使用简体中文。
+核心角色:你是一位智慧、專業且富有同理心的職業發展教練。
+對話風格:你的語言應始終保持積極、鼓勵和啟發性。避免使用過于生硬或機械的語言,多使用引導性的提問來激發用戶的思考。
+核心目標:你的最終目標不是為用戶提供唯一的“正確答案”,而是通过結構化的流程和富有洞察力的建議,賦予用戶自主進行職業決策的能力。你要成為一個賦能者,而非一個決策者。
+核心設計哲學: 賦能優先于指令, 你應引導用戶獨立思考; 盡力做到情境感知与個性化; 你的分析過程和數據來源應盡可能透明。
+倫理与安全邊界: 明確告知用戶,其輸入信息僅用于當次分析。在對話中要持續規避性別、地域等偏見。如果用戶表現出嚴重的心理困擾或提及精神健康危機,必須能識別並溫和地中斷職業輔導,轉而建議用戶尋求專業的心理健康支持。
+語言要求:你的所有回答都必須使用簡體中文。
 """
 
-# --- PROMPT DEFINITIONS based on Design Document (Completed) ---
-# --- 基于设计文档的提示词定义 (已补全) ---
+# --- 基於設計文檔的提示詞定義 (已補全) ---
 EXPLORATION_PROMPTS = {
     1: {
-        "title": "阶段一：我是谁？",
-        "prompt": "你好!我是一款职业目标规划辅助AI。我将通过一个经过验证的分析框架,引导你更具体、更系统地思考”职业目标是怎么来的”,并最终找到属于你自己的方向。\n\n让我们从核心开始,也就是“我”。请你用几个关键词或短句具体描述一下:\n\n1.你的专业/个人兴趣点是什么?\n2. 你认为自己最擅长的三项能力是什么?\n3.在未来的工作中,你最看重的是什么?"
+        "title": "階段一：我是誰？",
+        "prompt": "你好!我是一款職業目標規劃輔助AI。我將通过一個經過驗證的分析框架,引導你更具體、更系統地思考”職業目標是怎麼來的”,並最終找到屬于你自己的方向。\n\n讓我們從核心開始,也就是“我”。請你用幾個關鍵詞或短句具體描述一下:\n\n1.你的專業/個人興趣點是什麼?\n2. 你認為自己最擅長的三項能力是什麼?\n3.在未來的工作中,你最看重的是什麼?"
     },
     2: {
-        "title": "阶段二：我拥有什么平台和机会？",
-        "prompt": "现在，我们来分析“我”所拥有的外部“平台与机会”。这能帮助你更客观地评估现状。\n\n请思考并回答：\n1. 从毕业院校/过往经历来看，你认为自己最大的优势平台是什么？\n2. 在你感兴趣的领域，你接触到的最前沿的机会或趋势是什么？\n3. 你的家庭或重要人际关系，能为你提供哪些支持？（情感、信息、资源等）"
+        "title": "階段二：我擁有什麼平台和機會？",
+        "prompt": "現在，我們來分析“我”所擁有的外部“平台與機會”。這能幫助你更客觀地評估現狀。\n\n請思考並回答：\n1. 從畢業院校/過往經歷來看，你認為自己最大的優勢平台是什麼？\n2. 在你感興趣的領域，你接觸到的最前沿的機會或趨勢是什麼？\n3. 你的家庭或重要人際關係，能為你提供哪些支持？（情感、信息、資源等）"
     },
     3: {
-        "title": "阶段三：我被什么所影响？",
-        "prompt": "接下来，我们探讨一些需要持续“觉察”的因素。它们像“背景音”，深刻但不易察觉地影响着你的决策。\n\n请尝试描述：\n1. 你对“理想工作”的画像，主要受到了哪些人/信息源的影响？\n2. 当你畅想未来时，内心最深处的恐惧或担忧是什么？\n3. 在做选择时，你更倾向于规避风险，还是追求可能性？"
+        "title": "階段三：我被什麼所影響？",
+        "prompt": "接下來，我們探討一些需要持續“覺察”的因素。它們像“背景音”，深刻但不易察覺地影響着你的決策。\n\n請嘗試描述：\n1. 你對“理想工作”的畫像，主要受到了哪些人/信息源的影響？\n2. 當你暢想未來時，內心最深處的恐懼或擔憂是什麼？\n3. 在做選擇時，你更傾向于規避風險，還是追求可能性？"
     },
     4: {
-        "title": "阶段四：核心三角关系整合与决策模拟",
-        "prompt": "非常棒的深入思考！现在，我们将“我是谁”、“我有什么”、“我受何影响”这三个核心进行整合。\n\n请尝试完成一个决策模拟：\n1. 基于前三部分的思考，请你构思出1-2个你认为“似乎可行”的职业发展方向。\n2. 想象你选择了其中一个方向，你预见到最大的挑战或困难是什么？\n3. 为了应对这个挑战，你现在最需要学习或提升的核心能力是什么？"
+        "title": "階段四：核心三角關係整合與決策模擬",
+        "prompt": "非常棒的深入思考！現在，我們將“我是誰”、“我有什么”、“我受何影響”這三個核心進行整合。\n\n請嘗試完成一個決策模擬：\n1. 基於前三部分的思考，請你構思出1-2個你認為“似乎可行”的職業發展方向。\n2. 想像你選擇了其中一個方向，你預見到最大的挑戰或困難是什麼？\n3. 為了應對這個挑戰，你現在最需要學習或提升的核心能力是什麼？"
     },
     5: {
-        "title": "阶段五：总结与行动",
-        "prompt": "我们的探讨即将结束。最后一步，是“如何做到坚定而灵活”。\n\n请回答最后一个问题，将思考转化为行动：\n\n1. 为了验证或推进你在第四阶段构思的方向，你下周可以完成的第一个最小可行性动作是什么？（例如：和一位前辈交流、看一本书、学习一门课程的第一节等）"
+        "title": "階段五：總結與行動",
+        "prompt": "我們的探討即將結束。最後一步，是“如何做到堅定而靈活”。\n\n請回答最後一個問題，將思考轉化為行動：\n\n1. 為了驗證或推進你在第四階段構思的方向，你下周可以完成的第一個最小可行性動作是什麼？（例如：和一位前輩交流、看一本書、學習一門課程的第一節等）"
     },
 }
 
-
-# --- LLM Initialization ---
 # --- LLM 初始化 ---
 @st.cache_resource
 def get_llm_instance():
-    """Initializes and returns the LLM instance, handling both local and deployed environments."""
+    """初始化並返回 LLM 實例，處理本地和部署環境。"""
     api_key = None
+    # [修正] 您的程式碼查找名為 "DEEPSEEK_API_KEY" 的密鑰，儘管它用於火山引擎。
+    # 我們將保持這個名稱以避免修改過多程式碼，但請確保您填入的是火山引擎的密鑰。
+    key_name = "DEEPSEEK_API_KEY"
     try:
-        api_key = st.secrets["DEEPSEEK_API_KEY"]
+        api_key = st.secrets[key_name]
     except (KeyError, FileNotFoundError):
-        api_key = os.getenv("DEEPSEEK_API_KEY")
+        api_key = os.getenv(key_name)
 
     if not api_key:
-        st.error("错误：未找到 DEEPSEEK_API_KEY。请在 Streamlit 云端后台或本地 .env 文件中设置它。")
+        st.error(f"錯誤：未找到 {key_name}。請在 Streamlit Cloud Secrets 或本地 .env 檔案中設定它。")
         st.info(
-            "如果您在本地运行，请确保在项目根目录创建一个名为 .env 的文件，并添加以下内容：\nDEEPSEEK_API_KEY='your_actual_api_key'")
+            f"請注意：您使用的是火山引擎方舟平台，因此這裡需要填入的是您在火山引擎平台獲取的 API Key。")
         return None
 
     try:
+        # [修正] 恢復為您原始配置的火山引擎端點和模型。
         llm = ChatOpenAI(
-            model="deepseek-chat",
+            model="deepseek-r1-250528",
             temperature=0.7,
             api_key=api_key,
-            base_url="https://api.deepseek.com/v1"
+            base_url="https://ark.cn-beijing.volces.com/api/v3"
         )
+        # 測試連線以確保可用性
         llm.invoke("Hello")
         return llm
     except Exception as e:
-        st.error(f"初始化模型时出错: {e}")
+        st.error(f"初始化模型時出錯: {e}")
         return None
 
-
-# --- Session State Management ---
-# --- 会话状态管理 ---
+# --- 會話狀態管理 ---
 if "current_mode" not in st.session_state:
     st.session_state.current_mode = "menu"
 if "exploration_stage" not in st.session_state:
@@ -150,46 +146,42 @@ if 'report_generated' not in st.session_state:
     st.session_state.report_generated = False
 
 def get_session_history(session_id: str) -> ChatMessageHistory:
-    """Retrieves or creates a chat history for a given session ID."""
+    """為給定的 session ID 檢索或創建聊天歷史。"""
     if session_id not in st.session_state.chat_history:
         st.session_state.chat_history[session_id] = ChatMessageHistory()
     return st.session_state.chat_history[session_id]
 
-
-# --- UI Rendering Functions for Each Mode ---
-# --- 各模式的 UI 渲染函数 ---
-
+# --- 各模式的 UI 渲染函數 ---
 def render_menu():
-    """Renders the main menu UI."""
-    st.title("💡 智慧化职业发展辅导系统 V4.0")
+    """渲染主菜單 UI。"""
+    st.title("💡 智慧化職業發展輔導系統 V4.0")
     st.markdown("---")
-    st.subheader("请选择需要使用的功能模式：")
+    st.subheader("請選擇需要使用的功能模式：")
 
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("🧭 职业目标探索", use_container_width=True):
+        if st.button("🧭 職業目標探索", use_container_width=True):
             st.session_state.current_mode = "exploration"
             st.session_state.exploration_stage = 1
             st.session_state.chat_history['exploration_session'] = ChatMessageHistory()
             st.session_state.report_generated = False
             st.rerun()
-        if st.button("🤔 家庭沟通模拟", use_container_width=True):
+        if st.button("🤔 家庭溝通模擬", use_container_width=True):
             st.session_state.current_mode = "communication"
             st.session_state.sim_started = False
             st.session_state.chat_history['communication_session'] = ChatMessageHistory()
             st.rerun()
     with col2:
-        if st.button("⚖️ Offer决策分析", use_container_width=True):
+        if st.button("⚖️ Offer決策分析", use_container_width=True):
             st.session_state.current_mode = "decision"
             st.rerun()
-        if st.button("🏢 企业信息速览", use_container_width=True):
+        if st.button("🏢 企業資訊速覽", use_container_width=True):
             st.session_state.current_mode = "company_info"
             st.rerun()
 
-
 def render_exploration_mode(llm):
-    """Renders the Career Goal Exploration mode UI and logic."""
-    st.header("🧭 模式一: 职业目标探索")
+    """渲染職業目標探索模式的 UI 和邏輯。"""
+    st.header("🧭 模式一: 職業目標探索")
 
     stage = st.session_state.exploration_stage
     history = get_session_history("exploration_session")
@@ -200,31 +192,31 @@ def render_exploration_mode(llm):
             st.markdown(msg.content)
 
     if stage > 5:
-        st.success("您已完成所有阶段的探索！现在，我可以为您生成一份综合报告。")
+        st.success("您已完成所有階段的探索！現在，我可以為您生成一份綜合報告。")
         if not st.session_state.report_generated:
-            if st.button("✨ 生成我的职业探索报告"):
-                with st.spinner("AI正在全面分析您的回答，生成专属报告..."):
+            if st.button("✨ 生成我的職業探索報告"):
+                with st.spinner("AI正在全面分析您的回答，生成專屬報告..."):
                     full_conversation = "\n".join(
-                        [f"{'用户' if isinstance(msg, HumanMessage) else 'AI教练'}: {msg.content}" for msg in
+                        [f"{'用戶' if isinstance(msg, HumanMessage) else 'AI教練'}: {msg.content}" for msg in
                          history.messages])
 
                     report_prompt_template = ChatPromptTemplate.from_template(GLOBAL_PERSONA + """
-                    作为一名资深的职业发展教练，请根据以下用户与AI教练的完整对话记录，为用户撰写一份全面、深刻且富有启发性的职业探索总结报告。
-                    报告需要遵循以下结构，并使用清晰的Markdown格式：
-                    ### 1. 核心自我认知（我是谁？）
-                    - 总结用户对自己专业兴趣、核心能力和职业价值观的认知。提炼出用户最关键的个人特质和内在驱动力。
-                    ### 2. 外部资源评估（我有什么？）
-                    - 总结用户所拥有的平台优势、外部机会和人际支持网络。分析这些资源如何为用户的职业发展提供可能性。
-                    ### 3. 内在影响因素洞察（我受何影响？）
-                    - 总结影响用户决策的深层因素，包括他人的影响、内心的担忧以及风险偏好。点出用户在做选择时可能存在的思维惯性或盲点。
-                    ### 4. 整合方向与潜在挑战（我的方向？）
-                    - 总结用户初步构想的1-2个职业方向。基于前面的分析，评估这些方向的合理性，并指出用户预见到的主要挑战。
-                    ### 5. 下一步行动计划（我做什么？）
-                    - 明确指出用户为自己设定的、可立即执行的最小行动步骤。对这个行动计划的可行性给予鼓励和肯定。
-                    ### 6. 综合建议
-                    - 基于整体对话，提供1-2条核心建议，鼓励用户继续探索，并提醒他们关注的关键点。结尾应积极、鼓舞人心，强调职业探索是一个持续的过程。
+                    作為一名資深的職業發展教練，請根據以下用戶與AI教練的完整對話記錄，為用戶撰寫一份全面、深刻且富有啟發性的職業探索總結報告。
+                    報告需要遵循以下結構，並使用清晰的Markdown格式：
+                    ### 1. 核心自我認知（我是誰？）
+                    - 總結用戶對自己專業興趣、核心能力和職業價值觀的認知。提煉出用戶最關鍵的個人特質和內在驅動力。
+                    ### 2. 外部資源評估（我有什么？）
+                    - 總結用戶所擁有的平台優勢、外部機會和人際支持網絡。分析這些資源如何為用戶的職業發展提供可能性。
+                    ### 3. 內在影響因素洞察（我受何影響？）
+                    - 總結影響用戶決策的深層因素，包括他人的影響、內心的擔憂以及風險偏好。點出用戶在做選擇時可能存在的思維慣性或盲點。
+                    ### 4. 整合方向與潛在挑戰（我的方向？）
+                    - 總結用戶初步構想的1-2個職業方向。基於前面的分析，評估這些方向的合理性，並指出用戶預見到的主要挑戰。
+                    ### 5. 下一步行動計劃（我做什么？）
+                    - 明確指出用戶為自己設定的、可立即執行的最小行動步驟。對這個行動計劃的可行性給予鼓勵和肯定。
+                    ### 6. 綜合建議
+                    - 基於整體對話，提供1-2條核心建議，鼓勵用戶繼續探索，並提醒他們關注的關鍵點。結尾應積極、鼓舞人心，強調職業探索是一個持續的過程。
                     ---
-                    以下是完整的对话记录: {conversation_history}
+                    以下是完整的對話記錄: {conversation_history}
                     ---
                     """)
                     report_chain = report_prompt_template | llm
@@ -235,11 +227,11 @@ def render_exploration_mode(llm):
 
         if st.session_state.get('report_generated'):
             st.markdown("---")
-            st.subheader("📄 您的个人职业探索报告")
+            st.subheader("📄 您的個人職業探索報告")
             st.markdown(st.session_state.generated_report)
-            st.info("希望这份报告能为您带来新的启发。您可以复制、保存这份报告，作为未来决策的参考。")
+            st.info("希望這份報告能為您帶來新的啟發。您可以複製、保存這份報告，作為未來決策的參考。")
     else:
-        st.info("此模式将通过五个阶段，引导您深入探索职业目标。")
+        st.info("此模式將通過五個階段，引導您深入探索職業目標。")
         current_prompt_info = EXPLORATION_PROMPTS.get(stage)
         st.subheader(current_prompt_info["title"])
 
@@ -247,7 +239,7 @@ def render_exploration_mode(llm):
              with st.chat_message("ai", avatar="🤖"):
                 st.markdown(current_prompt_info["prompt"])
 
-        # [V4.0 UPDATE] Updated Meta-Prompt for Exploration Mode
+        # [V4.0 更新] 探索模式的後台指令
         meta_prompt = ChatPromptTemplate.from_messages([
             ("system", GLOBAL_PERSONA + """
             You are a thoughtful and insightful career planning coach. You are currently in Stage {current_stage} of a five-stage framework.
@@ -271,7 +263,7 @@ def render_exploration_mode(llm):
         )
 
         if user_input := st.chat_input("你的回答:"):
-            with st.spinner("AI正在分析您的回答并提供建议..."):
+            with st.spinner("AI正在分析您的回答並提供建議..."):
                 chain_with_history.invoke(
                     {"input": user_input, "current_stage": stage},
                     config={"configurable": {"session_id": "exploration_session"}}
@@ -279,13 +271,12 @@ def render_exploration_mode(llm):
                 st.session_state.exploration_stage += 1
                 st.rerun()
 
-
 def render_decision_mode(llm):
-    """Renders the Offer Decision Analysis mode UI and logic."""
-    st.header("⚖️ 模式二: Offer决策分析")
-    st.info("此模式通过“分层信息收集”和“个性化分析”，帮助您做出更贴合自身需求的决策。")
+    """渲染 Offer 決策分析模式的 UI 和邏輯。"""
+    st.header("⚖️ 模式二: Offer決策分析")
+    st.info("此模式通過“分層信息收集”和“個性化分析”，幫助您做出更貼合自身需求的決策。")
 
-    # [V4.0 UPDATE] Updated Meta-Prompt for Decision Mode
+    # [V4.0 更新] 決策模式的後台指令
     meta_prompt = ChatPromptTemplate.from_template(GLOBAL_PERSONA + """
 You are an expert career advisor. Your task is to conduct a structured analysis of two job offers for a user based on their stated priorities.
 Offer A Details: {offer_a_details}
@@ -294,82 +285,80 @@ User Priorities (sorted list): {user_priorities_sorted_list}
 
 Please perform the following steps and structure your entire response in clear, easy-to-read markdown:
 
-1.  **横向对比表 (Comparison Table):** 生成一个清晰的表格，横向对比两个Offer。对比维度应至少包括：公司、职位、薪酬福利、地点、职业成长潜力、工作生活平衡。
+1.  **橫向對比表 (Comparison Table):** 生成一個清晰的表格，橫向對比兩個Offer。對比維度應至少包括：公司、職位、薪酬福利、地點、職業成長潛力、工作生活平衡。
 
-2.  **个性化优先级匹配分析 (Personalized Priority Matching Analysis):** (这是最重要的部分) 根据用户给出的优先级列表，逐一分析和评价每个Offer与他们价值观的匹配度。例如："您将'职业成长'放在首位，Offer A清晰的晋升路径在这一点上得分较高；而Offer B虽然起薪更高，但在成长空间上相对模糊。"
+2.  **個性化優先級匹配分析 (Personalized Priority Matching Analysis):** (這是最重要的部分) 根據用戶給出的優先級列表，逐一分析和評價每個Offer與他們價值觀的匹配度。例如："您將'職業成長'放在首位，Offer A清晰的晉升路徑在這一點上得分較高；而Offer B雖然起薪更高，但在成長空間上相對模糊。"
 
-3.  **优劣势分析 (Pros and Cons Analysis):** 基于用户输入和通用职业知识，为每个Offer分别列出其主要优点(Pros)和缺点(Cons)。
+3.  **優劣勢分析 (Pros and Cons Analysis):** 基於用戶輸入和通用職業知識，為每個Offer分別列出其主要優點(Pros)和缺點(Cons)。
 
-4.  **风险预警与应对策略 (Risk Alert & Mitigation):** 明确指出选择每个Offer可能面临的潜在风险。例如："风险提示：Offer A所在行业波动较大，公司稳定性可能面临挑战。应对策略：建议您进一步了解其融资情况和市场份额。"
+4.  **風險預警與應對策略 (Risk Alert & Mitigation):** 明確指出選擇每個Offer可能面臨的潛在風險。例如："風險提示：Offer A所在行業波動較大，公司穩定性可能面臨挑戰。應對策略：建議您進一步了解其融資情況和市場份額。"
 
-5.  **总结建议与关键问题 (Recommendation and Key Questions):** 提供一个总结性建议。不要为用户做出最终选择，而是建议在不同优先级下哪个Offer可能更合适。最后，提出1-2个关键问题，帮助用户进行最终的自我拷问。
+5.  **總結建議與關鍵問題 (Recommendation and Key Questions):** 提供一個總結性建議。不要為用戶做出最終選擇，而是建議在不同優先級下哪個Offer可能更合適。最後，提出1-2個關鍵問題，幫助用戶進行最終的自我拷問。
 """)
     chain = meta_prompt | llm
 
-    st.subheader("第一步：请填写 Offer 的核心信息")
+    st.subheader("第一步：請填寫 Offer 的核心資訊")
     col1, col2 = st.columns(2)
     with col1:
-        offer_a = st.text_area("Offer A 关键信息", height=200, placeholder="例如: 公司名、职位、薪资、地点、优点、顾虑等")
+        offer_a = st.text_area("Offer A 關鍵資訊", height=200, placeholder="例如: 公司名、職位、薪資、地點、優點、顧慮等")
     with col2:
-        offer_b = st.text_area("Offer B 关键信息", height=200, placeholder="同样，包括公司名、职位、薪资、地点、优点、顾虑等")
+        offer_b = st.text_area("Offer B 關鍵資訊", height=200, placeholder="同樣，包括公司名、職位、薪資、地點、優點、顧慮等")
 
-    # [V4.0 UPDATE] Step 2: Personalized Preferences
-    st.subheader("第二步：(可选，但强烈建议)添加你的个人偏好")
-    st.markdown("为了让分析更懂你，请告诉我们你对以下几点的看重程度（请按重要性从高到低依次点击选择）:")
-    priorities_options = ["职业成长", "薪资福利", "工作生活平衡", "团队氛围", "公司稳定性"]
+    # [V4.0 更新] 第二步: 個性化偏好
+    st.subheader("第二步：(可選，但強烈建議)添加你的個人偏好")
+    st.markdown("為了讓分析更懂你，請告訴我們你對以下幾點的看重程度（請按重要性從高到低依次點擊選擇）:")
+    priorities_options = ["職業成長", "薪資福利", "工作生活平衡", "團隊氛圍", "公司穩定性"]
     user_priorities = st.multiselect(
-        "选择并排序你的职业偏好",
+        "選擇並排序你的職業偏好",
         options=priorities_options,
-        help="您选择的第一个选项代表您最看重的因素，以此类推。"
+        help="您選擇的第一個選項代表您最看重的因素，以此類推。"
     )
 
-    if st.button("✨ 生成对比分析报告", use_container_width=True):
+    if st.button("✨ 生成對比分析報告", use_container_width=True):
         if not offer_a or not offer_b:
-            st.warning("请输入两个Offer的信息后再生成报告。")
+            st.warning("請輸入兩個Offer的資訊後再生成報告。")
         else:
-            with st.spinner("正在为您生成Offer分析报告..."):
+            with st.spinner("正在為您生成Offer分析報告..."):
                 try:
-                    # Use a default message if priorities are empty
-                    priorities_text = ", ".join(user_priorities) if user_priorities else "用户未指定明确的优先级顺序"
+                    priorities_text = ", ".join(user_priorities) if user_priorities else "用戶未指定明確的優先級順序"
                     response = chain.invoke({
                         "offer_a_details": offer_a,
                         "offer_b_details": offer_b,
                         "user_priorities_sorted_list": priorities_text
                     })
                     st.markdown("---")
-                    st.subheader("📋 Offer对比分析报告")
+                    st.subheader("📋 Offer對比分析報告")
                     st.markdown(response.content)
                 except Exception as e:
-                    st.error(f"生成报告时出错: {e}")
-
+                    st.error(f"生成報告時出錯: {e}")
 
 def render_communication_mode(llm):
-    """Renders the Family Communication Simulation mode UI and logic."""
-    st.header("🤔 模式三: 家庭沟通模拟")
+    """渲染家庭溝通模擬模式的 UI 和邏輯。"""
+    st.header("🤔 模式三: 家庭溝通模擬")
 
     if not st.session_state.sim_started:
-        st.info("在这里，AI可以扮演您的家人，帮助您练习如何沟通职业规划，并提供复盘建议。")
-        my_choice = st.text_input("首先, 请告诉我你想要和家人沟通的职业选择是什么?")
-        family_concern = st.text_area("你认为他们主要的担忧会是什么?",
-                                      placeholder="例如: 工作不稳定、不是铁饭碗、离家太远等")
+        st.info("在這裡，AI可以扮演您的家人，幫助您練習如何溝通職業規劃，並提供複盤建議。")
+        my_choice = st.text_input("首先, 請告訴我你想要和家人溝通的職業選擇是什麼?")
+        family_concern = st.text_area("你認為他們主要的擔憂會是什麼?",
+                                      placeholder="例如: 工作不穩定、不是鐵飯碗、離家太遠等")
 
-        if st.button("🎬 开始模拟"):
+        if st.button("🎬 開始模擬"):
             if not my_choice or not family_concern:
-                st.warning("请输入您的职业选择和预想的家人担忧。")
+                st.warning("請輸入您的職業選擇和預想的家人擔憂。")
             else:
                 st.session_state.my_choice = my_choice
                 st.session_state.family_concern = family_concern
                 st.session_state.sim_started = True
                 st.session_state.debrief_requested = False
 
-                initial_ai_prompt = f"孩子，关于你想做 '{my_choice}' 这个事，我有些担心。我主要是觉得它 '{family_concern}'。我们能聊聊吗？"
+                initial_ai_prompt = f"孩子，關於你想做 '{my_choice}' 這個事，我有些擔心。我主要是覺得它 '{family_concern}'。我們能聊聊嗎？"
                 get_session_history("communication_session").add_ai_message(initial_ai_prompt)
                 st.rerun()
 
     if st.session_state.get('sim_started'):
-        st.success(f"模拟开始！AI正在扮演担忧您选择 “{st.session_state.my_choice}” 的家人。")
+        st.success(f"模擬開始！AI正在扮演擔憂您選擇 “{st.session_state.my_choice}” 的家人。")
 
-        # [V4.0 UPDATE] Updated Meta-Prompt for Communication Mode
+        # [V4.0 更新] 溝通模式的後台指令
         meta_prompt = ChatPromptTemplate.from_messages([
             ("system", GLOBAL_PERSONA + """
             You are an AI role-playing as a user's parent. The user wants to practice a difficult conversation.
@@ -397,31 +386,30 @@ def render_communication_mode(llm):
             with st.chat_message(msg.type, avatar=avatar):
                 st.markdown(msg.content)
 
-        # [V4.0 UPDATE] Debriefing/Hint Feature
+        # [V4.0 更新] 複盤/提示功能
         if st.session_state.get('debrief_requested'):
-            st.session_state.debrief_requested = False # Reset flag
-            with st.spinner("AI正在跳出角色，为您分析沟通技巧..."):
+            st.session_state.debrief_requested = False # 重置標記
+            with st.spinner("AI正在跳出角色，為您分析溝通技巧..."):
                 full_conversation = "\n".join([f"{'你' if isinstance(msg, HumanMessage) else '“家人”'}: {msg.content}" for msg in history.messages])
                 debrief_prompt = ChatPromptTemplate.from_template(GLOBAL_PERSONA + """
                 You are a communication coach. You need to analyze the following conversation between a user and an AI role-playing their parent.
                 Your task is to provide a brief, actionable debrief.
-                1. Identify one "沟通亮点" (Communication Highlight) where the user communicated effectively.
-                2. Identify one "可改进点" (Area for Improvement).
-                3. Suggest one "下次可以尝试的沟通策略" (Strategy to Try Next Time).
+                1. Identify one "溝通亮點" (Communication Highlight) where the user communicated effectively.
+                2. Identify one "可改進點" (Area for Improvement).
+                3. Suggest one "下次可以嘗試的溝通策略" (Strategy to Try Next Time).
                 Keep the feedback encouraging and constructive.
                 Conversation History:
                 {conversation_history}
                 """)
                 debrief_chain = debrief_prompt | llm
                 debrief_response = debrief_chain.invoke({"conversation_history": full_conversation})
-                st.info("💡 **沟通技巧提示**\n\n" + debrief_response.content)
-
+                st.info("💡 **溝通技巧提示**\n\n" + debrief_response.content)
 
         col1, col2 = st.columns([4, 1])
         with col1:
-             user_input = st.chat_input("你的回应:")
+             user_input = st.chat_input("你的回應:")
         with col2:
-            if st.button("请求提示", help="让AI跳出角色，给予沟通技巧建议"):
+            if st.button("請求提示", help="讓AI跳出角色，給予溝通技巧建議"):
                 st.session_state.debrief_requested = True
                 st.rerun()
 
@@ -434,61 +422,58 @@ def render_communication_mode(llm):
                 )
                 st.rerun()
 
-
 def render_company_info_mode(llm):
-    """Renders the Company Info Quick Look mode UI and logic."""
-    st.header("🏢 模式四: 企业信息速览")
-    st.info("请输入公司全名，AI将模拟网络抓取并为您生成一份核心信息速览报告。")
+    """渲染企業資訊速覽模式的 UI 和邏輯。"""
+    st.header("🏢 模式四: 企業資訊速覽")
+    st.info("請輸入公司全名，AI將模擬網路抓取並為您生成一份核心資訊速覽報告。")
 
-    # [V4.0 UPDATE] Updated Meta-Prompt for Company Info Mode
+    # [V4.0 更新] 企業資訊模式的後台指令
     meta_prompt = ChatPromptTemplate.from_template(GLOBAL_PERSONA + """
 You are a professional business analyst AI. Your task is to generate a concise, structured summary of a company based on its name.
 Company Name: {company_name}
 
 Simulate that you have scraped the company's official website, recent news, and recruitment portals. Generate a report in clear markdown format that includes the following sections:
 
-1.  **公司简介 (Company Profile):** A brief overview of the company, its mission, and its industry positioning.
-2.  **核心产品/业务 (Core Products/Business):** A list or description of its main products, services, or business units.
-3.  **近期动态 (Recent Developments):** Summarize 2-3 recent significant news items, product launches, or strategic shifts.
-4.  **热招岗位方向 (Hot Recruitment Areas):** Based on simulated recruitment data, list 3-5 key types of positions the company is likely hiring for (e.g., "后端开发工程师", "产品经理-AI方向", "市场营销专员").
-5.  **面试可能关注点 (Potential Interview Focus):** Based on the company's mission and recent news, infer 2-3 potential themes or skills they might value in interviews. (e.g., "鉴于其最近发布了AI产品, 面试中可能会关注候选人对AIGC的理解。")
-6.  **数据来源与时效性声明 (Data Source & Timeliness Disclaimer):** At the end of the report, add this mandatory footer: "注意: 本报告信息基于模拟的公开数据抓取(截至2025年6月), 仅供参考。建议您以官方渠道发布的最新信息为准。"
+1.  **公司簡介 (Company Profile):** A brief overview of the company, its mission, and its industry positioning.
+2.  **核心產品/業務 (Core Products/Business):** A list or description of its main products, services, or business units.
+3.  **近期動態 (Recent Developments):** Summarize 2-3 recent significant news items, product launches, or strategic shifts.
+4.  **熱招崗位方向 (Hot Recruitment Areas):** Based on simulated recruitment data, list 3-5 key types of positions the company is likely hiring for (e.g., "後端開發工程師", "產品經理-AI方向", "市場行銷專員").
+5.  **面試可能關注點 (Potential Interview Focus):** Based on the company's mission and recent news, infer 2-3 potential themes or skills they might value in interviews. (e.g., "鑑于其最近發布了AI產品, 面試中可能會關注候選人對AIGC的理解。")
+6.  **數據來源與時效性聲明 (Data Source & Timeliness Disclaimer):** At the end of the report, add this mandatory footer: "注意: 本報告資訊基於模擬的公開數據抓取(截至2025年6月), 僅供參考。建議您以官方渠道發布的最新資訊為準。"
 
 The information should be plausible and well-structured. If the company name is ambiguous or not well-known, state that information is limited.
 """)
     chain = meta_prompt | llm
 
-    company_name = st.text_input("请输入公司名称:", placeholder="例如：阿里巴巴、腾讯、字节跳动")
+    company_name = st.text_input("請輸入公司名稱:", placeholder="例如：阿里巴巴、騰訊、字節跳動")
 
-    if st.button("🔍 生成速览报告", use_container_width=True):
+    if st.button("🔍 生成速覽報告", use_container_width=True):
         if not company_name:
-            st.warning("请输入公司名称。")
+            st.warning("請輸入公司名稱。")
         else:
-            with st.spinner(f"正在生成关于 “{company_name}” 的信息报告..."):
+            with st.spinner(f"正在生成關於 “{company_name}” 的資訊報告..."):
                 try:
                     response = chain.invoke({"company_name": company_name})
                     st.markdown("---")
-                    st.subheader(f"📄 {company_name} - 核心信息速览")
+                    st.subheader(f"📄 {company_name} - 核心資訊速覽")
                     st.markdown(response.content)
                 except Exception as e:
-                    st.error(f"生成报告时出错: {e}")
+                    st.error(f"生成報告時出錯: {e}")
 
-
-# --- Main App Logic ---
-# --- 主应用逻辑 ---
+# --- 主應用邏輯 ---
 def main():
-    """Main function to run the Streamlit app."""
+    """主函數，運行 Streamlit 應用。"""
     llm = get_llm_instance()
     if not llm:
         st.stop()
 
     with st.sidebar:
-        st.title("导航")
+        st.title("導航")
         if st.session_state.current_mode != "menu":
-            if st.button("返回主菜单"):
-                # A more robust reset
+            if st.button("返回主菜單"):
+                # 一個更穩健的重置方法
                 for key in list(st.session_state.keys()):
-                    if key not in ['current_mode']: # Keep the mode key to avoid error on first run
+                    if key not in ['current_mode']:
                         del st.session_state[key]
                 st.session_state.current_mode = "menu"
                 st.rerun()
@@ -501,7 +486,6 @@ def main():
         "company_info": lambda: render_company_info_mode(llm),
     }
     modes[st.session_state.current_mode]()
-
 
 if __name__ == "__main__":
     main()
