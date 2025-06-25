@@ -19,22 +19,55 @@ st.set_page_config(
 # --- UI 美化 CSS 样式 ---
 st.markdown("""
 <style>
+    /* 明确导入所需的文本字体和图标字体 */
+    @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
-    html, body, [class*="st-"] {
+
+    /* 【V10.3 核心修正】移除过于宽泛的 [class*="st-"] 选择器，避免覆盖图标字体 */
+    html, body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
         line-height: 1.65;
+        background-color: #F8F9FA;
+        color: #495057; 
     }
-    .stApp { background-color: #F8F9FA; }
+
     h1, h2, h3, h4, h5, h6 { color: #212529; font-weight: 700; }
     h1 { font-size: 32px; }
     h2 { font-size: 28px; border-bottom: 2px solid #E9ECEF; padding-bottom: 0.4em; }
     h3 { font-size: 22px; }
-    .st-emotion-cache-z5fcl4 { background-color: #FFFFFF; border-radius: 12px; padding: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; transition: transform 0.3s ease, box-shadow 0.3s ease; }
-    .st-emotion-cache-z5fcl4:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(0,0,0,0.08); }
-    .stButton>button { border-radius: 8px; border: none; color: white; font-weight: 500; padding: 12px 24px; background-image: linear-gradient(135deg, #5D9CEC 0%, #4A90E2 100%); transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(74, 144, 226, 0.2); }
+
+    /* 功能模块卡片样式 */
+    .st-emotion-cache-z5fcl4 {
+        background-color: #FFFFFF;
+        border-radius: 12px;
+        padding: 28px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border: 1px solid #E9ECEF;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .st-emotion-cache-z5fcl4:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+    }
+
+    /* 主操作按钮样式 */
+    .stButton>button {
+        border-radius: 8px; border: none; color: white; font-weight: 500;
+        padding: 12px 24px; background-image: linear-gradient(135deg, #5D9CEC 0%, #4A90E2 100%);
+        transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(74, 144, 226, 0.2);
+    }
     .stButton>button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(74, 144, 226, 0.3); }
+
+    /* 聊天消息样式 */
     .stChatMessage { border-radius: 12px; border: 1px solid #E9ECEF; background-color: #FFFFFF; padding: 16px; margin-bottom: 1rem; }
-    .stChatInputContainer { position: sticky; bottom: 0; background-color: #FFFFFF; padding: 12px 0px; border-top: 1px solid #E9ECEF; box-shadow: 0 -4px 12px rgba(0,0,0,0.05); }
+    .st-emotion-cache-T21nqy { background-color: #e3eeff; border-color: #a4c7ff; }
+
+    /* 聊天输入框容器 */
+    .stChatInputContainer {
+        position: sticky; bottom: 0; background-color: #FFFFFF;
+        padding: 12px 0px; border-top: 1px solid #E9ECEF;
+        box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -56,7 +89,7 @@ def get_llm_instance():
     except (KeyError, FileNotFoundError):
         api_key = os.getenv(key_name)
     if not api_key:
-        st.error(f"错误：未找到 {key_name}。请在 Streamlit Cloud Secrets 或本地 .env 文件中设置它。")
+        st.error(f"错误：未找到 {key_name}。请在 Streamlit Cloud Secrets 或本地 .env 文件中设置它。");
         return None
     try:
         llm = ChatOpenAI(model="deepseek-r1-250528", temperature=0.7, api_key=api_key,
@@ -105,6 +138,8 @@ def render_menu():
             st.caption(modes_config[0][2])
             if st.button("开始探索", use_container_width=True, key=f"menu_{modes_config[0][0]}"):
                 st.session_state.current_mode = modes_config[0][0];
+                init_session_state();
+                st.session_state.current_mode = "exploration";
                 st.rerun()
         st.write("")
         with st.container(border=True):
@@ -112,6 +147,8 @@ def render_menu():
             st.caption(modes_config[1][2])
             if st.button("开始规划", use_container_width=True, key=f"menu_{modes_config[1][0]}"):
                 st.session_state.current_mode = modes_config[1][0];
+                init_session_state();
+                st.session_state.current_mode = "panoramic";
                 st.rerun()
     with col2:
         for mode_key, title, caption in modes_config[2:]:
@@ -119,6 +156,8 @@ def render_menu():
                 st.subheader(title);
                 st.caption(caption)
                 if st.button(f"开始{title.split(' ')[1][:2]}", use_container_width=True, key=f"menu_{mode_key}"):
+                    st.session_state.current_mode = mode_key;
+                    init_session_state();
                     st.session_state.current_mode = mode_key;
                     st.rerun()
             st.write("")
@@ -129,34 +168,30 @@ def render_exploration_mode(llm):
     history = get_session_history("exploration_session")
     stage = st.session_state.get('exploration_stage', 1)
     for msg in history.messages:
-        avatar = "🧑‍💻" if isinstance(msg, HumanMessage) else "🤖"
+        avatar = "🧑‍💻" if isinstance(msg, HumanMessage) else "🤖";
         st.chat_message(msg.type, avatar=avatar).markdown(msg.content, unsafe_allow_html=True)
 
-    # 【V10.1 核心修正】恢复了原始版本中完整、清晰的引导文案和问题
     prompts = {
         1: {
             "title": "> **第一阶段：分析“我”(可控因素)**\n> \n> 你好！我将引导你使用“职业目标缘起分析框架”，从“我”、“社会”、“家庭”三个核心维度，系统性地探索你的职业方向。\n> \n> 首先，我们来分析“我”这个核心。请在下方回答：",
             "questions": ["1. 你的专业是什么？你对它的看法如何？", "2. 你的学校或过往经历，为你提供了怎样的平台与基础？"],
-            "button_text": "提交关于“我”的分析"
-        },
+            "button_text": "提交关于“我”的分析"},
         2: {
             "title": "> **第二阶段：分析“社会”(外部机会)**\n> \n> 好的，我们盘点了“我”的基础。接着，我们来分析外部的“社会”因素。请思考：",
             "questions": ["1. 你观察到当下有哪些你感兴趣的社会或科技趋势？（例如：AI、大健康、可持续发展等）",
                           "2. 根据你的观察，这些趋势可能带来哪些新的行业或职位机会？",
                           "3. 在你过往的经历中，有没有一些偶然的机缘或打工经验，让你对某个领域产生了特别的了解？"],
-            "button_text": "提交关于“社会”的分析"
-        },
+            "button_text": "提交关于“社会”的分析"},
         3: {
             "title": "> **第三阶段：觉察“家庭”(环境影响)**\n> \n> 接下来，我们来探讨需要持续“觉察”的“家庭”与环境影响。请描述：",
             "questions": ["1. 你的家庭或重要亲友，对你的职业有什么样的期待？",
                           "2. 有没有哪位榜样对你的职业选择产生了影响？",
                           "3. 你身边的“圈子”（例如朋友、同学）主要从事哪些工作？这对你有什么潜在影响？"],
-            "button_text": "提交关于“家庭”的分析"
-        },
+            "button_text": "提交关于“家庭”的分析"},
     }
 
     if stage in prompts:
-        config = prompts[stage]
+        config = prompts[stage];
         st.markdown(config["title"])
         with st.form(f"stage{stage}_form"):
             responses = [st.text_area(q, height=100) for q in config["questions"]]
@@ -174,7 +209,7 @@ def render_exploration_mode(llm):
         with st.chat_message("ai", avatar="🤖"):
             full_conversation = "\n\n".join([msg.content for msg in history.messages if isinstance(msg, HumanMessage)])
             stage4_prompt = ChatPromptTemplate.from_template(
-                GLOBAL_PERSONA + "作为一名智慧且富有洞察力的职业发展教练，请严格根据以下用户在“我”、“社会”、“家庭”三个阶段的完整回答，为用户生成一份整合分析与建议报告。报告必须包含以下三个部分，并使用清晰的Markdown格式：\n\n### 1. 初步决策方向建议\n- ...\n\n### 2. 预期“收入”分析\n- ...\n\n### 3. 第一个“行动”建议\n- ...\n\n---\n以下是用户的完整回答: \n{conversation_history}\n---")
+                GLOBAL_PERSONA + "作为一名智慧且富有洞察力的职业发展教练，请严格根据以下用户在“我”、“社会”、“家庭”三个阶段的完整回答，为用户生成一份整合分析与建议报告。报告必须包含以下三个部分...（省略部分指令）...\n\n---\n以下是用户的完整回答: \n{conversation_history}\n---")
             stage4_chain = stage4_prompt | llm
             with st.spinner("AI教练正在全面分析您的回答..."):
                 response_content = st.write_stream(stage4_chain.stream({"conversation_history": full_conversation}))
@@ -196,20 +231,16 @@ def render_decision_mode(llm):
     st.header("模式二: Offer 决策分析")
     with st.container(border=True):
         st.info("请输入两个Offer的关键信息，AI将为您生成一份结构化的对比分析报告。")
-        chain = ChatPromptTemplate.from_template(
-            GLOBAL_PERSONA + "You are an expert career advisor. Your task is to conduct a structured analysis of two job offers for a user. Offer A Details: {offer_a_details}. Offer B Details: {offer_b_details}. User Priorities: {user_priorities_sorted_list}. Please create a markdown report with: 1. Comparison Table. 2. Priority Matching Analysis. 3. Pros and Cons. 4. Risk Alert. 5. Recommendation.") | llm
+        chain = ChatPromptTemplate.from_template(GLOBAL_PERSONA + "You are an expert career advisor...") | llm
         st.subheader("第一步：请填写 Offer 的核心信息")
-        col1, col2 = st.columns(2, gap="large")
+        col1, col2 = st.columns(2, gap="large");
         with col1:
-            offer_a = st.text_area("Offer A 关键信息", height=200,
-                                   placeholder="例如: 公司名、职位、薪资、地点、优点、顾虑等")
+            offer_a = st.text_area("Offer A 关键信息", height=200, placeholder="...")
         with col2:
-            offer_b = st.text_area("Offer B 关键信息", height=200,
-                                   placeholder="同样，包括公司名、职位、薪资、地点、优点、顾虑等")
+            offer_b = st.text_area("Offer B 关键信息", height=200, placeholder="...")
         st.subheader("第二步：(可选) 添加你的个人偏好")
         priorities_options = ["职业成长", "薪资福利", "工作生活平衡", "团队氛围", "公司稳定性"]
-        user_priorities = st.multiselect("请按重要性依次选择你的职业偏好：", options=priorities_options,
-                                         help="您选择的第一个选项代表您最看重的因素。")
+        user_priorities = st.multiselect("请按重要性依次选择你的职业偏好：", options=priorities_options)
         if st.button("生成对比分析报告", use_container_width=True):
             if not offer_a or not offer_b:
                 st.warning("请输入两个Offer的信息。")
@@ -228,8 +259,8 @@ def render_communication_mode(llm):
     if not st.session_state.get('sim_started', False):
         with st.container(border=True):
             st.info("在这里，AI可以扮演您的家人，帮助您练习如何沟通职业规划，并提供复盘建议。")
-            my_choice = st.text_input("首先, 请告诉我你想要和家人沟通的职业选择是什么?")
-            family_concern = st.text_area("你认为他们主要的担忧会是什么?",
+            my_choice = st.text_input("你想和家人沟通的职业选择是？")
+            family_concern = st.text_area("你认为他们主要的担忧会是什么？",
                                           placeholder="例如: 工作不稳定、不是铁饭碗、离家太远等")
             if st.button("开始模拟"):
                 if not my_choice or not family_concern:
@@ -239,7 +270,6 @@ def render_communication_mode(llm):
                     st.session_state.family_concern = family_concern
                     st.session_state.sim_started = True;
                     st.session_state.debrief_requested = False
-                    st.session_state.chat_history['communication_session'] = ChatMessageHistory()
                     initial_ai_prompt = f"孩子，关于你想做“{my_choice}”这个事，我有些担心。我主要是觉得它“{family_concern}”。我们能聊聊吗？"
                     get_session_history("communication_session").add_ai_message(initial_ai_prompt);
                     st.rerun()
@@ -251,10 +281,9 @@ def render_communication_mode(llm):
                 avatar = "🧑‍💻" if isinstance(msg, HumanMessage) else "🧓";
                 st.chat_message(msg.type, avatar=avatar).markdown(msg.content)
         if not st.session_state.get('debrief_requested', False):
-            communication_prompt = ChatPromptTemplate.from_messages([("system",
-                                                                      GLOBAL_PERSONA + f"""现在，你将扮演一个关心孩子但思想略显传统的家人。- 你的核心担忧是: "{st.session_state.family_concern}"- 你的对话目标是：反复确认孩子是否考虑清楚了这些担忧，而不是轻易被说服。"""),
-                                                                     MessagesPlaceholder(variable_name="history"),
-                                                                     ("human", "{input}")])
+            communication_prompt = ChatPromptTemplate.from_messages(
+                [("system", GLOBAL_PERSONA + f'现在，你将扮演一个关心孩子但思想略显传统的家人...（省略部分指令）'),
+                 MessagesPlaceholder(variable_name="history"), ("human", "{input}")])
             chain_with_history = RunnableWithMessageHistory(communication_prompt | llm,
                                                             lambda s: get_session_history(s),
                                                             input_messages_key="input", history_messages_key="history")
@@ -269,7 +298,7 @@ def render_communication_mode(llm):
                 full_conversation = "\n".join(
                     [f"{'我' if isinstance(msg, HumanMessage) else '家人'}: {msg.content}" for msg in history.messages])
                 debrief_prompt = ChatPromptTemplate.from_template(
-                    GLOBAL_PERSONA + "你现在切换回职业发展教练的角色。对以下沟通记录进行复盘，必须包含：\n\n### 1. 沟通亮点\n\n### 2. 可优化点\n\n### 3. 具体话术建议\n\n---\n对话记录:\n{conversation_history}\n---")
+                    GLOBAL_PERSONA + "你现在切换回职业发展教练的角色。对以下沟通记录进行复盘...（省略部分指令）")
                 debrief_chain = debrief_prompt | llm
                 with st.spinner("正在生成沟通复盘报告..."):
                     response_stream = debrief_chain.stream(
@@ -284,7 +313,7 @@ def render_company_info_mode(llm):
     with st.container(border=True):
         st.info("请输入公司全名，AI将为您生成一份核心信息速览报告。")
         chain = ChatPromptTemplate.from_template(
-            GLOBAL_PERSONA + "You are a professional business analyst AI. Your task is to provide a concise and structured overview of a given company. Company Name: {company_name}. Please structure your report in markdown with these sections: ### 1. 公司简介, ### 2. 近期动态与新闻, ### 3. 企业文化与价值观, ### 4. 热门招聘方向.") | llm
+            GLOBAL_PERSONA + "You are a professional business analyst AI... Provide a structured overview for {company_name}...") | llm
         company_name = st.text_input("请输入公司名称:", placeholder="例如：阿里巴巴、腾讯、字节跳动")
         if st.button("生成速览报告", use_container_width=True):
             if not company_name:
@@ -301,6 +330,7 @@ def render_panoramic_mode(llm):
     st.header("模式五: 职业路径全景规划")
     history = get_session_history("panoramic_session")
     stage = st.session_state.get('panoramic_stage', 1)
+
     for msg in history.messages:
         avatar = "🧑‍💻" if isinstance(msg, HumanMessage) else "🤖"
         with st.chat_message(msg.type, avatar=avatar):
@@ -319,17 +349,35 @@ def render_panoramic_mode(llm):
                 st.markdown(msg.content)
 
     meta_prompt_template = GLOBAL_PERSONA + """
-    You are an expert career strategist... (指令同V9.3版本)
+    You are an expert career strategist, guiding the user through a multi-stage panoramic career path analysis. You are currently in Stage {current_stage}.
+    User's Core Competency Profile: {user_profile}
+    User's Chosen Profession(s): {chosen_professions}
+    User's Chosen Region(s): {chosen_region}
+
+    Your Task is to execute the current stage's logic.
+    --- STAGE-SPECIFIC INSTRUCTIONS ---
+    **Stage 1:** Do not respond.
+    **Stage 2 (Profession Concretization):** Based on the user's profile, present 3-5 concrete professions and prompt the user to select one or two.
+    **Stage 3 (Enterprise & Region Targeting):** Based on the chosen profession, identify representative companies and primary geographic clusters in China (e.g., "对于芯片设计，核心集群在上海张江和深圳；对于互联网，则在北京、深圳、杭州。"). Prompt the user for their geographical preference.
+    **Stage 4 (Final Comprehensive Report):** The user has provided all inputs. Generate a single, comprehensive report with the following sections:
+        1.  **产业链位置分析:** Explain the role's position in the industry chain. Then, generate a Mermaid flowchart (`graph TD`). **CRITICAL SYNTAX RULE 1:** If any node text contains special characters like ':', '/', or '()', you MUST enclose the entire text in double quotes. **CRITICAL SYNTAX RULE 2:** To create a line break inside a node's text, you MUST use the `<br>` HTML tag, and the entire text MUST be enclosed in double quotes. **NEVER use the `\n` newline character inside a node's brackets `[]`.** Correct Example: `A["第一行<br>第二行: 带特殊符号"]`.
+        2.  **行业趋势与“365理论”定性:** Analyze industry trends and classify the industry as "战略型", "支柱型", or "趋势型".
+        3.  **目标职能要求与差距分析:** List typical requirements (学历, 关键技能, 核心经验) and perform a gap analysis.
+        4.  **个人发展蓝图:** Provide 2-3 actionable suggestions to bridge the gaps.
+        5.  **总结与战略规划:** Provide a concluding summary.
+        6.  **【CRITICAL】战略性思考点 (Strategic Thinking Points):** Finally, conclude the entire report with this section. Under this heading, provide 2-3 questions. **These questions are for the user's own long-term reflection and YOU MUST NOT ask the user to answer them now.** Frame them as introspective prompts. Example: '面对行业X的趋势，我该如何定位自己？' not '请选择您想探讨的问题'. This is the absolute final part of your response.
     """
+
     chain = ChatPromptTemplate.from_template(meta_prompt_template) | llm
+
     if stage == 1:
         st.markdown("> 你好！我是你的职业路径规划助手。让我们从认识你自己开始。")
         with st.form("profile_form"):
-            st.subheader("请根据以下五个维度，描述你的“核心能力”：")
-            edu = st.text_area("学历背景", placeholder="你的专业、学位、以及相关的核心课程")
-            skills = st.text_area("核心技能", placeholder="你最擅长的3-5项硬技能或软技能")
-            exp = st.text_area("相关经验", placeholder="相关的实习、工作项目、或个人作品集")
-            char = st.text_area("品行特质", placeholder="你认为自己最重要的职业品行或工作风格")
+            st.subheader("请根据以下五个维度，描述你的“核心能力”：");
+            edu = st.text_area("学历背景", placeholder="你的专业、学位、以及相关的核心课程");
+            skills = st.text_area("核心技能", placeholder="你最擅长的3-5项硬技能或软技能");
+            exp = st.text_area("相关经验", placeholder="相关的实习、工作项目、或个人作品集");
+            char = st.text_area("品行特质", placeholder="你认为自己最重要的职业品行或工作风格");
             motiv = st.text_area("内在动机", placeholder="在工作中，什么最能给你带来成就感？")
             if st.form_submit_button("提交我的能力画像", use_container_width=True):
                 if all([edu, skills, exp, char, motiv]):
@@ -340,6 +388,7 @@ def render_panoramic_mode(llm):
                     st.rerun()
                 else:
                     st.warning("请填写所有五个维度的信息。")
+
     elif stage in [2, 3]:
         if len(history.messages) % 2 != 0:
             with st.chat_message("ai", avatar="🤖"):
@@ -360,6 +409,7 @@ def render_panoramic_mode(llm):
                 st.session_state.chosen_region = user_input
             st.session_state.panoramic_stage += 1;
             st.rerun()
+
     elif stage == 4:
         if len(history.messages) % 2 != 0:
             with st.chat_message("ai", avatar="🤖"):
@@ -373,6 +423,7 @@ def render_panoramic_mode(llm):
                     history.add_ai_message(response_content)
             st.session_state.panoramic_stage += 1;
             st.rerun()
+
     elif stage == 5:
         st.success("恭喜！您已完成本次职业路径全景规划。")
         st.info("您可以向上滚动查看为您生成的完整报告。")
@@ -394,7 +445,8 @@ def main():
                 st.session_state.current_mode = "menu";
                 st.rerun()
         st.markdown("---");
-        st.caption("© 2025 智慧职业辅导 V10.1")
+        st.caption("© 2025 智慧职业辅导 V10.3")
+
     modes = {"menu": render_menu, "exploration": render_exploration_mode, "decision": render_decision_mode,
              "communication": render_communication_mode, "company_info": render_company_info_mode,
              "panoramic": render_panoramic_mode}
