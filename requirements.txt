@@ -1,8 +1,10 @@
 streamlit
 langchain
-langchain_community
-langchain_core
-langchain_openai
+langchain-openai
+langchain-community
 python-dotenv
-openai
 streamlit-mermaid
+PyPDF2
+pytesseract
+pdf2image
+Pillow
